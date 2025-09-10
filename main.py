@@ -8,8 +8,11 @@ Created on Wed Sep 10 16:07:02 2025
 
 from fastapi import FastAPI, Request
 import openai
+import os
 app = FastAPI()
 
+
+testKey = os.getenv('TESTER')
 @app.get("/")
 def root():
     return {"status": "ok"}
@@ -17,6 +20,8 @@ def root():
 @app.post("/inbound-email")
 async def inbound_email(request: Request):
     data = await request.json()
+    
     print("📨 Inbound email received")
+    print(testKey)
     print(data)  # log full JSON payload
     return {"status": "received"}
