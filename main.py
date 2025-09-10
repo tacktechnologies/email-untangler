@@ -7,7 +7,7 @@ Created on Wed Sep 10 16:07:02 2025
 """
 
 from fastapi import FastAPI, Request
-
+import openai
 app = FastAPI()
 
 @app.get("/")
