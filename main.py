@@ -21,10 +21,27 @@ def root():
 async def inbound_email(request: Request):
     data = await request.json()
     testKey = os.getenv('TESTER')
+    openapikey = os.getenv('TESTER')
     sender_email = data.get("FromFull", {}).get("Email")  # clean email
     print("Sender:", sender_email)
-
+    openai.api_key = openapikey
     print("📨 Inbound email received")
     print(testKey)
     print(data)  # log full JSON payload
+    mod = True
+    while mod:
+        try:
+            completion = openai.chat.completions.create(
+              model="gpt-4-1106-preview",
+              messages=[
+                {"role": "user", "content": f"""your job is to summarise email threads and show dates, senders and receipients and outcomes. here is the thread, return the summaries: {data}"""
+                 }
+              ]
+            )
+            mod = False
+        except Exception as e:
+            print(e)
+
+    b = completion.dict()['choices'][0]['message']['content']
+    print(b)
     return {"status": "received"}
