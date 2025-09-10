@@ -12,7 +12,7 @@ import os
 app = FastAPI()
 
 
-testKey = os.getenv('TESTER')
+
 @app.get("/")
 def root():
     return {"status": "ok"}
@@ -20,7 +20,7 @@ def root():
 @app.post("/inbound-email")
 async def inbound_email(request: Request):
     data = await request.json()
-    
+    testKey = os.getenv('TESTER')
     print("📨 Inbound email received")
     print(testKey)
     print(data)  # log full JSON payload
