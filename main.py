@@ -21,7 +21,7 @@ def root():
 async def inbound_email(request: Request):
     data = await request.json()
     testKey = os.getenv('TESTER')
-    openapikey = os.getenv('TESTER')
+    openapikey = os.getenv('openapi')
     sender_email = data.get("FromFull", {}).get("Email")  # clean email
     print("Sender:", sender_email)
     openai.api_key = openapikey
