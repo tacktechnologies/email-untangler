@@ -21,6 +21,9 @@ def root():
 async def inbound_email(request: Request):
     data = await request.json()
     testKey = os.getenv('TESTER')
+    sender_email = data.get("FromFull", {}).get("Email")  # clean email
+    print("Sender:", sender_email)
+
     print("📨 Inbound email received")
     print(testKey)
     print(data)  # log full JSON payload
