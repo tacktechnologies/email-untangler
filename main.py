@@ -27,19 +27,18 @@ async def inbound_email(request: Request):
     openai.api_key = openapikey
     print("📨 Inbound email received")
     print(testKey)
-    mod = True
-    while mod:
-        try:
-            completion = openai.chat.completions.create(
-              model="gpt-4-1106-preview",
-              messages=[
-                {"role": "user", "content": f"""your job is to very succinctly summarise email threads chronologically and show dates, senders and receipients and outcomes. here is the thread, return the summaries and if there are outstanding action items at the end: {data}"""
-                 }
-              ]
-            )
-            mod = False
-        except Exception as e:
-            print(e)
+
+    try:
+        completion = openai.chat.completions.create(
+          model="gpt-4-1106-preview",
+          messages=[
+            {"role": "user", "content": f"""your job is to very succinctly summarise email threads chronologically and show dates, senders and receipients and outcomes. here is the thread, return the summaries and if there are outstanding action items at the end: {data}"""
+             }
+          ]
+        )
+
+    except Exception as e:
+        print(e)
 
     b = completion.dict()['choices'][0]['message']['content']
     print(b)
