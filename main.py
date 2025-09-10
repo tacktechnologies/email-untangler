@@ -33,7 +33,7 @@ async def inbound_email(request: Request):
             completion = openai.chat.completions.create(
               model="gpt-4-1106-preview",
               messages=[
-                {"role": "user", "content": f"""your job is to summarise email threads and show dates, senders and receipients and outcomes. here is the thread, return the summaries and if there are outstanding action items at the end: {data}"""
+                {"role": "user", "content": f"""your job is to very succinctly summarise email threads chronologically and show dates, senders and receipients and outcomes. here is the thread, return the summaries and if there are outstanding action items at the end: {data}"""
                  }
               ]
             )
