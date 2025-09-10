@@ -110,5 +110,28 @@ async def inbound_email(request: Request):
     
     
     print("📝 Final summary:\n", final_summary)
+    print('email starting')
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+    
+    mail_content = f'{final_summary}'
+
+    sender_address = 'tackbackup@gmail.com'
+    sender_pass = 'ighnkarucqfhllzq'
+    receiver_address = 'aaron.r.brace@gmail.com'
+    #Setup the MIME
+    message = MIMEMultipart()
+    message['From'] = sender_address
+    message['To'] = receiver_address
+    message['Subject'] = f'email summary available'
+    message.attach(MIMEText(mail_content, 'plain'))
+    session = smtplib.SMTP('smtp.gmail.com', 587)
+    session.starttls() #enable security
+    session.login(sender_address, sender_pass)
+    text = message.as_string()
+    session.sendmail(sender_address, receiver_address, text)
+    session.quit()
+    print('email sent')
 
     return {"status": "processed"}
