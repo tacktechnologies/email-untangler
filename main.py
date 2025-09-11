@@ -86,6 +86,7 @@ async def inbound_email(request: Request):
 
     # Config / env
     openapikey = os.getenv("openapi")
+    postmarkkey = os.getenv("POSTMARKKEY")
     sender_email = data.get("FromFull", {}).get("Email")
     text_body = data.get("TextBody") or ""
 
@@ -109,5 +110,27 @@ async def inbound_email(request: Request):
         final_summary = await merge_summaries(partial_summaries, openapikey)
     
     
+    
     print("📝 Final summary:\n", final_summary)
+    import requests
+
+    url = "https://api.postmarkapp.com/email"
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "X-Postmark-Server-Token": postmarkkey
+    }
+    
+    data = {
+        "From": "abrace@deeperstate.co.uk",
+        "To": "abrace@deeperstate.co.uk",
+        "Subject": f"Hello from Postmark",
+        "HtmlBody": f"<strong>Hello</strong> {final_summary}.",
+        "MessageStream": "outbound"
+    }
+    
+    response = requests.post(url, headers=headers, json=data, timeout=15)
+    
+    print("Status:", response.status_code)
+    print("Response:", response.text)
     return {"status": "processed"}
