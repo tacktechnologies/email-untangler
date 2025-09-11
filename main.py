@@ -30,13 +30,26 @@ async def summarize_chunk(chunk: str, openapikey: str) -> str:
                     "role": "user",
                     "content": f"""
 You are analyzing part of an email thread.
-Summarize this section chronologically, highlighting:
-- Dates and timeline
-- Senders and recipients
-- Key events, decisions, and outcomes
-- Any outstanding action items
+Return a clean, readable HTML summary with sections for:
 
-Text:
+<h2>Dates and Timeline</h2>
+<ul>…</ul>
+
+<h2>Senders and Recipients</h2>
+<ul>…</ul>
+
+<h2>Key Events, Decisions, and Outcomes</h2>
+<ul>…</ul>
+
+<h2>Outstanding Action Items</h2>
+<ul>…</ul>
+
+Rules:
+- Use semantic HTML tags (<h2>, <ul>, <li>, <strong> etc.)
+- No Markdown (**text**, - lists)
+- Keep it brief and scannable
+
+Text to summarize:
 {chunk}
                     """,
                 }
@@ -121,11 +134,20 @@ async def inbound_email(request: Request):
         "X-Postmark-Server-Token": postmarkkey
     }
     
+    html_body = f"""
+    <html>
+      <body style="font-family:Arial, sans-serif; line-height:1.5;">
+        {final_summary}
+      </body>
+    </html>
+    """
+    
     data = {
-        "From": "abrace@deeperstate.co.uk",
+        "From": "untangle@audienserve.com",
         "To": "abrace@deeperstate.co.uk",
-        "Subject": f"Hello from Postmark",
-        "HtmlBody": f"<strong>Hello</strong> {final_summary}.",
+        "Subject": "Email Summary",
+        "HtmlBody": html_body,
+        "TextBody": "Your email client does not support HTML.",
         "MessageStream": "outbound"
     }
     
