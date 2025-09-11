@@ -144,7 +144,7 @@ async def inbound_email(request: Request):
     
     data = {
         "From": "untangle@audienserve.com",
-        "To": "abrace@deeperstate.co.uk",
+        "To": sender_email,
         "Subject": "Email Summary",
         "HtmlBody": html_body,
         "TextBody": "Your email client does not support HTML.",
