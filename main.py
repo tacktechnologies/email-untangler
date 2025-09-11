@@ -130,7 +130,10 @@ async def inbound_email(request: Request):
     }
     
     response = requests.post(url, headers=headers, json=data, timeout=15)
-    
+    if response.status_code == 200:
+        print("✅ Email sent via Postmark")
+    else:
+        print("❌ Postmark send failed:", response.status_code, response.text)
     print("Status:", response.status_code)
     print("Response:", response.text)
     return {"status": "processed"}
