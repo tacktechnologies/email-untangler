@@ -30,28 +30,38 @@ async def summarize_chunk(chunk: str, openapikey: str) -> str:
                     "role": "user",
                     "content": f"""
 You are analyzing part of an email thread.
-Return a clean, readable HTML summary with sections for:
 
-<h2>Dates and Timeline</h2>
-<ul>…</ul>
+Return a clear, attractive HTML summary in this exact structure:
 
-<h2>Senders and Recipients</h2>
-<ul>…</ul>
+<h2>📅 Dates and Timeline</h2>
+<ul>
+  <li>Use <strong>bold</strong> for key dates</li>
+</ul>
 
-<h2>Key Events, Decisions, and Outcomes</h2>
-<ul>…</ul>
+<h2>👥 Senders and Recipients</h2>
+<ul>
+  <li>List each person and their role (sender, CC, etc.)</li>
+</ul>
 
-<h2>Outstanding Action Items</h2>
-<ul>…</ul>
+<h2>📝 Key Events, Decisions, and Outcomes</h2>
+<ul>
+  <li>Summarize what was discussed and decided</li>
+</ul>
+
+<h2>⚡ Outstanding Action Items</h2>
+<ul>
+  <li>Use <strong>bold names</strong> and <em>deadlines</em></li>
+</ul>
 
 Rules:
-- Use semantic HTML tags (<h2>, <ul>, <li>, <strong> etc.)
+- Use semantic HTML (<h2>, <ul>, <li>, <strong>, <em>)
+- Add relevant emojis to section headers only
 - No Markdown (**text**, - lists)
-- Keep it brief and scannable
+- Keep it concise and scannable
 
 Text to summarize:
 {chunk}
-                    """,
+"""
                 }
             ],
         )
@@ -73,17 +83,29 @@ async def merge_summaries(summaries: list[str], openapikey: str) -> str:
                     "role": "user",
                     "content": f"""
 You are given multiple partial summaries of an email thread.
-Merge them into one coherent, chronological narrative.
-Make it clear and concise.
-Highlight:
-- Dates and timeline
-- Who sent what to whom
-- Decisions and agreements
-- Outstanding action items
+Merge them into one coherent, chronological narrative
+using the same exact HTML structure below:
+
+<h2>📅 Dates and Timeline</h2>
+<ul>...</ul>
+
+<h2>👥 Senders and Recipients</h2>
+<ul>...</ul>
+
+<h2>📝 Key Events, Decisions, and Outcomes</h2>
+<ul>...</ul>
+
+<h2>⚡ Outstanding Action Items</h2>
+<ul>...</ul>
+
+Rules:
+- Use semantic HTML
+- Include emojis in section headers
+- Be concise, scannable, and visually consistent
 
 Partial summaries:
 {combined}
-                    """,
+"""
                 }
             ],
         )
@@ -121,9 +143,7 @@ async def inbound_email(request: Request):
         final_summary = partial_summaries[0]
     else:
         final_summary = await merge_summaries(partial_summaries, openapikey)
-    
-    
-    
+
     print("📝 Final summary:\n", final_summary)
     import requests
 
@@ -133,15 +153,38 @@ async def inbound_email(request: Request):
         "Content-Type": "application/json",
         "X-Postmark-Server-Token": postmarkkey
     }
-    
+
+    # Styled HTML email layout
     html_body = f"""
     <html>
-      <body style="font-family:Arial, sans-serif; line-height:1.5;">
-        {final_summary}
+      <body style="font-family:Segoe UI, Arial, sans-serif; background:#f4f6f9; padding:30px; color:#333;">
+        <div style="max-width:650px; margin:0 auto; background:#ffffff; border-radius:12px; padding:40px; box-shadow:0 4px 14px rgba(0,0,0,0.06);">
+          <h1 style="text-align:center; color:#4a90e2; margin-bottom:30px;">📨 Email Thread Summary</h1>
+          <style>
+            h2 {{
+              border-left: 6px solid #4a90e2;
+              padding-left: 10px;
+              margin-top: 30px;
+              color: #2c3e50;
+            }}
+            ul {{
+              list-style: none;
+              padding-left: 0;
+            }}
+            ul li::before {{
+              content: '• ';
+              color: #4a90e2;
+            }}
+          </style>
+          {final_summary}
+          <p style="margin-top:40px; font-size:13px; color:#999; text-align:center;">
+            — Generated automatically by <strong>Untangle</strong>
+          </p>
+        </div>
       </body>
     </html>
     """
-    
+
     data = {
         "From": "untangle@audienserve.com",
         "To": sender_email,
@@ -150,7 +193,7 @@ async def inbound_email(request: Request):
         "TextBody": "Your email client does not support HTML.",
         "MessageStream": "outbound"
     }
-    
+
     response = requests.post(url, headers=headers, json=data, timeout=15)
     if response.status_code == 200:
         print("✅ Email sent via Postmark")
