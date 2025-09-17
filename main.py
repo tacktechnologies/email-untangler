@@ -171,7 +171,7 @@ async def inbound_email(request: Request):
     <html>
       <body style="font-family:Segoe UI, Arial, sans-serif; background:#f4f6f9; padding:30px; color:#333;">
         <div style="max-width:650px; margin:0 auto; background:#ffffff; border-radius:12px; padding:40px; box-shadow:0 4px 14px rgba(0,0,0,0.06);">
-          <h1 style="text-align:center; color:#4a90e2; margin-bottom:30px;">📨 Email Thread Summary</h1>
+          <h1 style="text-align:center; color:#4a90e2; margin-bottom:30px;">📨 Your Thread Has Been Untangled!</h1>
           <style>
             h2 {{
               border-left: 6px solid #4a90e2;
