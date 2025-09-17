@@ -1,6 +1,8 @@
 from fastapi import FastAPI, Request
 import openai
 import os
+import re
+import requests
 
 app = FastAPI()
 
@@ -19,6 +21,11 @@ def chunk_text(text: str, max_tokens: int = 100_000) -> list[str]:
     return [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
 
 
+def clean_summary_html(text: str) -> str:
+    """Remove any accidental code fences or backticks from model output."""
+    return re.sub(r"```html|```", "", text, flags=re.IGNORECASE).strip()
+
+
 async def summarize_chunk(chunk: str, openapikey: str) -> str:
     """Summarize a single chunk of an email thread."""
     openai.api_key = openapikey
@@ -31,7 +38,9 @@ async def summarize_chunk(chunk: str, openapikey: str) -> str:
                     "content": f"""
 You are analyzing part of an email thread.
 
-Return a clear, attractive HTML summary in this exact structure:
+Return only valid HTML — **never wrap it in Markdown code fences** (no ```html).
+
+Use this exact structure with emojis and color-bar-friendly headers:
 
 <h2>📅 Dates and Timeline</h2>
 <ul>
@@ -57,7 +66,7 @@ Rules:
 - Use semantic HTML (<h2>, <ul>, <li>, <strong>, <em>)
 - Add relevant emojis to section headers only
 - No Markdown (**text**, - lists)
-- Keep it concise and scannable
+- Be concise and scannable
 
 Text to summarize:
 {chunk}
@@ -65,7 +74,7 @@ Text to summarize:
                 }
             ],
         )
-        return completion.choices[0].message.content.strip()
+        return clean_summary_html(completion.choices[0].message.content.strip())
     except Exception as e:
         print("❌ Error summarizing chunk:", e)
         return ""
@@ -84,7 +93,7 @@ async def merge_summaries(summaries: list[str], openapikey: str) -> str:
                     "content": f"""
 You are given multiple partial summaries of an email thread.
 Merge them into one coherent, chronological narrative
-using the same exact HTML structure below:
+using this exact structure — and return only raw HTML (no Markdown fences):
 
 <h2>📅 Dates and Timeline</h2>
 <ul>...</ul>
@@ -102,6 +111,7 @@ Rules:
 - Use semantic HTML
 - Include emojis in section headers
 - Be concise, scannable, and visually consistent
+- No Markdown or code fences
 
 Partial summaries:
 {combined}
@@ -109,7 +119,7 @@ Partial summaries:
                 }
             ],
         )
-        return completion.choices[0].message.content.strip()
+        return clean_summary_html(completion.choices[0].message.content.strip())
     except Exception as e:
         print("❌ Error merging summaries:", e)
         return "Error merging summaries."
@@ -144,8 +154,10 @@ async def inbound_email(request: Request):
     else:
         final_summary = await merge_summaries(partial_summaries, openapikey)
 
+    # Clean again just in case
+    final_summary = clean_summary_html(final_summary)
+
     print("📝 Final summary:\n", final_summary)
-    import requests
 
     url = "https://api.postmarkapp.com/email"
     headers = {
